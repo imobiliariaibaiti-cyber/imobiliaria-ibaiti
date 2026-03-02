@@ -182,20 +182,15 @@ app.post(
     }
 
     const uploads = await Promise.all(
-      req.files.map(
-        (file) =>
-          new Promise((resolve, reject) => {
-            const stream = cloudinary.uploader.upload_stream(
-              { folder: "imobiliaria-ibaiti" },
-              (error, result) => {
-                if (error) return reject(new Error(error.message || "Erro no upload Cloudinary."));
-                if (!result?.secure_url) return reject(new Error("Cloudinary retornou sem URL da imagem."));
-                resolve(result.secure_url);
-              }
-            );
-            stream.end(file.buffer);
-          })
-      )
+      req.files.map(async (file) => {
+        const base64 = file.buffer.toString("base64");
+        const dataUri = `data:${file.mimetype};base64,${base64}`;
+        const result = await cloudinary.uploader.upload(dataUri, { folder: "imobiliaria-ibaiti" });
+        if (!result?.secure_url) {
+          throw new Error("Cloudinary retornou sem URL da imagem.");
+        }
+        return result.secure_url;
+      })
     );
 
     res.status(201).json({ urls: uploads });
