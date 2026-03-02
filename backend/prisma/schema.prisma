@@ -9,13 +9,17 @@ datasource db {
 
 model Property {
   id          Int      @id @default(autoincrement())
+  propertyCode String?
   title       String
   type        String
   city        String
+  areaSize    String?
   price       Int
   description String
+  deedAndRegistryOk Boolean @default(false)
   featured    Boolean  @default(false)
   images      Json
+  videoUrl    String?
   createdAt   DateTime @default(now())
 }
 

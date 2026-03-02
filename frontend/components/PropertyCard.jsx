@@ -4,7 +4,7 @@ import { formatPrice, getWhatsAppLink, resolveImage } from "@/lib/format";
 export default function PropertyCard({ property }) {
   const image = resolveImage(property.images);
   const whatsapp = getWhatsAppLink(
-    `Olá! Tenho interesse no imóvel: ${property.title} em ${property.city}.`
+    `Ola! Tenho interesse no imovel ${property.title}${property.propertyCode ? ` (codigo ${property.propertyCode})` : ""} em ${property.city}. Quero saber mais para fechar negocio.`
   );
 
   return (
@@ -16,6 +16,7 @@ export default function PropertyCard({ property }) {
       />
       <div className="space-y-3 p-5">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-600">{property.type}</p>
+        {property.propertyCode && <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-500">{property.propertyCode}</p>}
         <h3 className="text-xl font-bold text-brand-900">{property.title}</h3>
         <p className="text-sm text-slate-600">{property.city}</p>
         <p className="text-lg font-semibold text-brand-700">{formatPrice(property.price)}</p>
@@ -32,11 +33,10 @@ export default function PropertyCard({ property }) {
             className="rounded-xl border border-brand-700 px-4 py-2 text-sm font-semibold text-brand-700"
             rel="noreferrer"
           >
-            WhatsApp
+            Saber Mais
           </a>
         </div>
       </div>
     </article>
   );
 }
-

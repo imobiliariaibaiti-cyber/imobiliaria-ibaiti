@@ -11,3 +11,37 @@ export const getWhatsAppLink = (message) => {
   return `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
 };
 
+export const getYouTubeEmbedUrl = (url) => {
+  if (!url) return "";
+
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.replace("www.", "");
+
+    if (host === "youtu.be") {
+      const id = parsed.pathname.replace("/", "");
+      return id ? `https://www.youtube.com/embed/${id}` : "";
+    }
+
+    if (host === "youtube.com" || host === "m.youtube.com") {
+      if (parsed.pathname === "/watch") {
+        const id = parsed.searchParams.get("v");
+        return id ? `https://www.youtube.com/embed/${id}` : "";
+      }
+
+      if (parsed.pathname.startsWith("/shorts/")) {
+        const id = parsed.pathname.split("/")[2];
+        return id ? `https://www.youtube.com/embed/${id}` : "";
+      }
+
+      if (parsed.pathname.startsWith("/embed/")) {
+        return `https://www.youtube.com${parsed.pathname}`;
+      }
+    }
+  } catch {
+    return "";
+  }
+
+  return "";
+};
+

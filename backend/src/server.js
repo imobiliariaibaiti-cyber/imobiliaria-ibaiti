@@ -119,17 +119,21 @@ app.post(
   "/admin/properties",
   authMiddleware,
   asyncHandler(async (req, res) => {
-    const { title, type, city, price, description, featured, images } = req.body;
+    const { propertyCode, title, type, city, areaSize, price, description, deedAndRegistryOk, featured, images, videoUrl } = req.body;
 
     const property = await prisma.property.create({
       data: {
+        propertyCode: propertyCode?.trim() || null,
         title,
         type,
         city,
+        areaSize: areaSize?.trim() || null,
         price: Number(price),
         description,
+        deedAndRegistryOk: Boolean(deedAndRegistryOk),
         featured: Boolean(featured),
-        images: parseImages(images)
+        images: parseImages(images),
+        videoUrl: videoUrl?.trim() || null
       }
     });
 
@@ -141,18 +145,22 @@ app.put(
   "/admin/properties/:id",
   authMiddleware,
   asyncHandler(async (req, res) => {
-    const { title, type, city, price, description, featured, images } = req.body;
+    const { propertyCode, title, type, city, areaSize, price, description, deedAndRegistryOk, featured, images, videoUrl } = req.body;
 
     const property = await prisma.property.update({
       where: { id: Number(req.params.id) },
       data: {
+        propertyCode: propertyCode?.trim() || null,
         title,
         type,
         city,
+        areaSize: areaSize?.trim() || null,
         price: Number(price),
         description,
+        deedAndRegistryOk: Boolean(deedAndRegistryOk),
         featured: Boolean(featured),
-        images: parseImages(images)
+        images: parseImages(images),
+        videoUrl: videoUrl?.trim() || null
       }
     });
 

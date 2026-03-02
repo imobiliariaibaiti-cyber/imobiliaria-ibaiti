@@ -6,11 +6,15 @@ import { formatPrice } from "@/lib/format";
 
 const initialForm = {
   id: null,
+  propertyCode: "",
   title: "",
   type: "Fazenda",
   city: "",
+  areaSize: "",
   price: "",
   description: "",
+  videoUrl: "",
+  deedAndRegistryOk: false,
   featured: false,
   images: ""
 };
@@ -57,11 +61,15 @@ export default function AdminPropertiesPage() {
       }
 
       const payload = {
+        propertyCode: form.propertyCode,
         title: form.title,
         type: form.type,
         city: form.city,
+        areaSize: form.areaSize,
         price: Number(form.price),
         description: form.description,
+        videoUrl: form.videoUrl,
+        deedAndRegistryOk: form.deedAndRegistryOk,
         featured: form.featured,
         images: urls
       };
@@ -89,12 +97,16 @@ export default function AdminPropertiesPage() {
   const editProperty = (property) => {
     setForm({
       ...property,
+      propertyCode: property.propertyCode || "",
+      areaSize: property.areaSize || "",
+      videoUrl: property.videoUrl || "",
+      deedAndRegistryOk: Boolean(property.deedAndRegistryOk),
       images: Array.isArray(property.images) ? property.images.join(", ") : ""
     });
   };
 
   const removeProperty = async (id) => {
-    if (!confirm("Excluir este imóvel?")) return;
+    if (!confirm("Excluir este imovel?")) return;
     try {
       await adminRequest(`/admin/properties/${id}`, token, { method: "DELETE" });
       await loadProperties(token);
@@ -106,30 +118,37 @@ export default function AdminPropertiesPage() {
   return (
     <main className="container-main space-y-8 py-10">
       <div>
-        <h1 className="font-display text-4xl text-brand-900">Painel de Imóveis</h1>
-        <p className="text-slate-600">Cadastre, edite e destaque seus anúncios.</p>
+        <h1 className="font-display text-4xl text-brand-900">Painel de Imoveis</h1>
+        <p className="text-slate-600">Cadastre, edite e destaque seus anuncios.</p>
       </div>
 
       <form onSubmit={onSubmit} className="grid gap-3 rounded-3xl border border-brand-100 bg-white p-6 shadow-lg shadow-brand-900/5 md:grid-cols-2">
-        <input className="rounded-xl border border-brand-100 px-4 py-3" placeholder="Título" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
+        <input className="rounded-xl border border-brand-100 px-4 py-3" placeholder="Codigo do imovel (ex: IBT-001)" value={form.propertyCode} onChange={(e) => setForm({ ...form, propertyCode: e.target.value })} />
+        <input className="rounded-xl border border-brand-100 px-4 py-3" placeholder="Titulo" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
         <select className="rounded-xl border border-brand-100 px-4 py-3" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
           <option>Fazenda</option>
-          <option>Sítio</option>
-          <option>Chácara</option>
+          <option>Sitio</option>
+          <option>Chacara</option>
         </select>
         <input className="rounded-xl border border-brand-100 px-4 py-3" placeholder="Cidade" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} required />
-        <input className="rounded-xl border border-brand-100 px-4 py-3" type="number" placeholder="Preço" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} required />
-        <textarea className="rounded-xl border border-brand-100 px-4 py-3 md:col-span-2" placeholder="Descrição" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} required />
-        <input className="rounded-xl border border-brand-100 px-4 py-3 md:col-span-2" placeholder="URLs das imagens (separadas por vírgula)" value={form.images} onChange={(e) => setForm({ ...form, images: e.target.value })} />
+        <input className="rounded-xl border border-brand-100 px-4 py-3" placeholder="Tamanho da area (ex: 21.200 m2)" value={form.areaSize} onChange={(e) => setForm({ ...form, areaSize: e.target.value })} />
+        <input className="rounded-xl border border-brand-100 px-4 py-3" type="number" placeholder="Preco" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} required />
+        <textarea className="rounded-xl border border-brand-100 px-4 py-3 md:col-span-2" placeholder="Descricao" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} required />
+        <input className="rounded-xl border border-brand-100 px-4 py-3 md:col-span-2" placeholder="URL do video no YouTube (opcional)" value={form.videoUrl} onChange={(e) => setForm({ ...form, videoUrl: e.target.value })} />
+        <input className="rounded-xl border border-brand-100 px-4 py-3 md:col-span-2" placeholder="URLs das imagens (separadas por virgula)" value={form.images} onChange={(e) => setForm({ ...form, images: e.target.value })} />
         <input className="rounded-xl border border-brand-100 px-4 py-3 md:col-span-2" type="file" multiple accept="image/*" onChange={(e) => setImagesFiles(Array.from(e.target.files || []))} />
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" checked={form.featured} onChange={(e) => setForm({ ...form, featured: e.target.checked })} />
           Marcar como destaque
         </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={form.deedAndRegistryOk} onChange={(e) => setForm({ ...form, deedAndRegistryOk: e.target.checked })} />
+          Escritura e registro ok
+        </label>
         <button className="rounded-xl bg-brand-700 px-5 py-3 font-semibold text-white md:justify-self-end">{editing ? "Atualizar" : "Cadastrar"}</button>
         {editing && (
           <button type="button" onClick={() => setForm(initialForm)} className="rounded-xl border border-brand-700 px-5 py-3 font-semibold text-brand-700 md:justify-self-end">
-            Cancelar edição
+            Cancelar edicao
           </button>
         )}
         {error && <p className="text-sm text-red-600 md:col-span-2">{error}</p>}
@@ -140,7 +159,10 @@ export default function AdminPropertiesPage() {
           <article key={property.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-brand-100 bg-white p-4">
             <div>
               <h2 className="font-semibold text-brand-900">{property.title}</h2>
-              <p className="text-sm text-slate-600">{property.type} - {property.city} - {formatPrice(property.price)}</p>
+              <p className="text-sm text-slate-600">
+                {property.propertyCode ? `${property.propertyCode} - ` : ""}
+                {property.type} - {property.city} - {formatPrice(property.price)}
+              </p>
             </div>
             <div className="flex gap-2">
               <button onClick={() => editProperty(property)} className="rounded-lg border border-brand-700 px-3 py-1 text-sm font-semibold text-brand-700">Editar</button>
@@ -152,4 +174,3 @@ export default function AdminPropertiesPage() {
     </main>
   );
 }
-
