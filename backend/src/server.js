@@ -10,6 +10,14 @@ import { authMiddleware } from "./middleware/auth.js";
 
 dotenv.config();
 
+process.on("unhandledRejection", (reason) => {
+  console.error("Unhandled Promise Rejection:", reason);
+});
+
+process.on("uncaughtException", (error) => {
+  console.error("Uncaught Exception:", error);
+});
+
 const app = express();
 const prisma = new PrismaClient();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -180,7 +188,7 @@ app.post(
             const stream = cloudinary.uploader.upload_stream(
               { folder: "imobiliaria-ibaiti" },
               (error, result) => {
-                if (error) return reject(error);
+                if (error) return reject(new Error(error.message || "Erro no upload Cloudinary."));
                 if (!result?.secure_url) return reject(new Error("Cloudinary retornou sem URL da imagem."));
                 resolve(result.secure_url);
               }
