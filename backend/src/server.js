@@ -9,6 +9,7 @@ import { PrismaClient } from "@prisma/client";
 import { authMiddleware } from "./middleware/auth.js";
 
 dotenv.config();
+const BUILD_MARKER = "backend-build-2026-03-02-01";
 
 process.on("unhandledRejection", (reason) => {
   console.error("Unhandled Promise Rejection:", reason);
@@ -204,5 +205,5 @@ app.use((err, _req, res, _next) => {
 
 const PORT = Number(process.env.PORT || 4000);
 app.listen(PORT, () => {
-  console.log(`API executando na porta ${PORT}`);
+  console.log(`${BUILD_MARKER} | API executando na porta ${PORT}`);
 });
