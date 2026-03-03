@@ -4,20 +4,28 @@ import { useMemo, useState } from "react";
 import { formatPrice } from "@/lib/format";
 
 export default function ConsorcioSimulator({ value }) {
+  // Parâmetros alinhados ao simulador de Consórcio Imobiliário CAIXA (adm ~16%, fundo reserva ~3%, sem juros)
   const [entrada, setEntrada] = useState(0);
-  const [prazo, setPrazo] = useState(180);
-  const [taxaAdm, setTaxaAdm] = useState(0.18);
+  const [prazo, setPrazo] = useState(180); // 15 anos
+  const [taxaAdm, setTaxaAdm] = useState(0.16);
+  const [fundoReserva, setFundoReserva] = useState(0.03);
+  const [seguroMensal, setSeguroMensal] = useState(0);
 
   const parcela = useMemo(() => {
     const base = Math.max(0, Number(value || 0) - Number(entrada || 0));
     const prazoVal = Math.max(1, Number(prazo || 1));
-    const taxa = Math.max(0, Number(taxaAdm || 0));
-    return (base * (1 + taxa)) / prazoVal;
-  }, [value, entrada, prazo, taxaAdm]);
+    const adm = Math.max(0, Number(taxaAdm || 0));
+    const fundo = Math.max(0, Number(fundoReserva || 0));
+    return (base * (1 + adm + fundo)) / prazoVal + Number(seguroMensal || 0);
+  }, [value, entrada, prazo, taxaAdm, fundoReserva, seguroMensal]);
 
   return (
     <div className="rounded-3xl border border-brand-100 bg-white p-5 space-y-3 shadow-sm">
-      <h3 className="font-semibold text-brand-900">Simule consórcio</h3>
+      <h3 className="font-semibold text-brand-900">Simule consórcio (base CAIXA)</h3>
+      <p className="text-xs text-slate-600">
+        Cálculo aproximado seguindo o simulador da Caixa Econômica Federal: valor da carta sem juros, taxa adm {Math.round(taxaAdm * 100)}%,
+        fundo reserva {Math.round(fundoReserva * 100)}%, seguro opcional.
+      </p>
       <div className="grid grid-cols-2 gap-3 text-sm">
         <label className="space-y-1">
           <span>Entrada (R$)</span>
@@ -45,6 +53,26 @@ export default function ConsorcioSimulator({ value }) {
             className="w-full rounded-lg border px-3 py-2"
             value={taxaAdm}
             onChange={(e) => setTaxaAdm(Number(e.target.value) || 0)}
+          />
+        </label>
+        <label className="space-y-1">
+          <span>Fundo reserva (%)</span>
+          <input
+            type="number"
+            step="0.01"
+            className="w-full rounded-lg border px-3 py-2"
+            value={fundoReserva}
+            onChange={(e) => setFundoReserva(Number(e.target.value) || 0)}
+          />
+        </label>
+        <label className="space-y-1">
+          <span>Seguro mensal (R$)</span>
+          <input
+            type="number"
+            step="0.01"
+            className="w-full rounded-lg border px-3 py-2"
+            value={seguroMensal}
+            onChange={(e) => setSeguroMensal(Number(e.target.value) || 0)}
           />
         </label>
       </div>
