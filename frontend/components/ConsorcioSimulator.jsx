@@ -13,7 +13,7 @@ export default function ConsorcioSimulator({ value }) {
 
   const parcela = useMemo(() => {
     const base = Math.max(0, Number(value || 0) - Number(entrada || 0));
-    const prazoVal = Math.min(150, Math.max(1, Number(prazo || 1))); // limite CAIXA
+    const prazoVal = Math.min(150, Math.max(1, Number(prazo || 1))); // limite CAIXA (não deixa passar de 150)
     const adm = Math.max(0, Number(taxaAdm || 0));
     const fundo = Math.max(0, Number(fundoReserva || 0));
     return (base * (1 + adm + fundo)) / prazoVal + Number(seguroMensal || 0);
@@ -44,7 +44,10 @@ export default function ConsorcioSimulator({ value }) {
             min={12}
             max={150}
             value={prazo}
-            onChange={(e) => setPrazo(Math.min(150, Number(e.target.value) || 1))}
+            onChange={(e) => {
+              const v = Number(e.target.value) || 1;
+              setPrazo(Math.min(prazo, Math.max(12, v))); // só permite reduzir ou ficar dentro do limite
+            }}
           />
         </label>
         <label className="space-y-1">
