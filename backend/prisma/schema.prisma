@@ -13,6 +13,8 @@ model Property {
   title       String
   type        String
   city        String
+  latitude    Float?
+  longitude   Float?
   areaSize    String?
   price       Int
   description String
@@ -21,5 +23,34 @@ model Property {
   images      Json
   videoUrl    String?
   createdAt   DateTime @default(now())
+}
+
+model Comment {
+  id         Int      @id @default(autoincrement())
+  propertyId Int
+  property   Property @relation(fields: [propertyId], references: [id])
+  name       String
+  contact    String?
+  rating     Int      @default(5)
+  text       String
+  status     CommentStatus @default(PENDING)
+  createdAt  DateTime @default(now())
+}
+
+model CitySummary {
+  id        Int      @id @default(autoincrement())
+  city      String   @unique
+  summary   String?
+  population Int?
+  rating    Float?
+  lat       Float?
+  lng       Float?
+  fetchedAt DateTime @default(now())
+}
+
+enum CommentStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 

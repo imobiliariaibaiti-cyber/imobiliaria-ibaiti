@@ -1,66 +1,78 @@
+import { formatPrice, getWhatsAppLink, resolveImage, getYouTubeEmbedUrl } from "@/lib/format";
 import { getPropertyById } from "@/lib/api";
-import { formatPrice, getWhatsAppLink, getYouTubeEmbedUrl, resolveImage } from "@/lib/format";
+import TravelTimeChips from "@/components/TravelTimeChips";
+import CitySummaryCard from "@/components/CitySummaryCard";
+import ConsorcioSimulator from "@/components/ConsorcioSimulator";
+import Comments from "@/components/Comments";
+import HighlightsChips from "@/components/HighlightsChips";
 
-export async function generateMetadata({ params }) {
-  const property = await getPropertyById(params.id);
-  return {
-    title: property.title,
-    description: `${property.type} em ${property.city}. ${formatPrice(property.price)}`,
-    alternates: { canonical: `/imoveis/${params.id}` }
-  };
-}
+export const dynamic = "force-dynamic";
 
-export default async function PropertyDetailPage({ params }) {
+export default async function PropertyPage({ params }) {
   const property = await getPropertyById(params.id);
-  const images = Array.isArray(property.images) && property.images.length ? property.images : [resolveImage([])];
-  const videoEmbedUrl = getYouTubeEmbedUrl(property.videoUrl);
-  const statusDeed = property.deedAndRegistryOk ? "Sim" : "Nao";
-  const whatsappMessage = `Tenho interesse no imovel ${property.title}${property.propertyCode ? ` (codigo ${property.propertyCode})` : ""} em ${property.city}. Gostaria de saber mais para fechar negocio.`;
+  const whatsapp = getWhatsAppLink(
+    `Ola! Tenho interesse no imovel ${property.title}${property.propertyCode ? ` (codigo ${property.propertyCode})` : ""} em ${property.city}.`
+  );
 
   return (
-    <main className="container-main py-10">
-      <div className="grid gap-8 md:grid-cols-2">
-        <div className="space-y-3">
-          <img src={images[0]} alt={property.title} className="h-80 w-full rounded-3xl object-cover" />
-          <div className="grid grid-cols-3 gap-2">
-            {images.slice(1, 4).map((image) => (
-              <img key={image} src={image} alt={property.title} className="h-24 w-full rounded-xl object-cover" />
-            ))}
+    <main className="container-main py-8 space-y-8">
+      <section className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+        <div className="space-y-4">
+          <img src={resolveImage(property.images)} alt={property.title} className="h-[420px] w-full rounded-3xl object-cover" />
+          {property.videoUrl && (
+            <iframe
+              className="aspect-video w-full rounded-2xl border border-brand-100"
+              src={getYouTubeEmbedUrl(property.videoUrl)}
+              allowFullScreen
+            />
+          )}
+        </div>
+
+        <div className="space-y-4 rounded-3xl border border-brand-100 bg-white p-6 shadow-sm">
+          <div className="space-y-1">
+            {property.propertyCode && <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-600">Codigo {property.propertyCode}</p>}
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-600">{property.type}</p>
+            <h1 className="font-display text-3xl text-brand-900">{property.title}</h1>
+            <p className="text-slate-700">{property.city}</p>
           </div>
-          {videoEmbedUrl && (
-            <div className="overflow-hidden rounded-2xl border border-brand-100">
-              <iframe
-                src={videoEmbedUrl}
-                title={`Video do imovel ${property.title}`}
-                className="h-64 w-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                referrerPolicy="strict-origin-when-cross-origin"
-                allowFullScreen
-              />
+
+          <p className="text-3xl font-bold text-brand-800">{formatPrice(property.price)}</p>
+
+          <HighlightsChips property={property} />
+
+          <div className="flex gap-3">
+            <a href={whatsapp} target="_blank" rel="noreferrer" className="flex-1 rounded-xl bg-brand-700 px-4 py-3 text-center font-semibold text-white">
+              WhatsApp
+            </a>
+            <a href="#contato" className="flex-1 rounded-xl border border-brand-700 px-4 py-3 text-center font-semibold text-brand-700">
+              Agendar visita
+            </a>
+          </div>
+
+          <TravelTimeChips propertyId={property.id} lat={property.latitude} lng={property.longitude} />
+          <CitySummaryCard city={property.city} />
+        </div>
+      </section>
+
+      <section className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+        <article className="rounded-3xl border border-brand-100 bg-white p-6 space-y-4">
+          <h2 className="font-display text-2xl text-brand-900">Descrição</h2>
+          <p className="text-slate-700 leading-relaxed whitespace-pre-line">{property.description}</p>
+        </article>
+
+        <div className="space-y-4">
+          {property.type?.toLowerCase().includes("casa") ? (
+            <div className="rounded-3xl border border-brand-100 bg-white p-5 space-y-2">
+              <h3 className="font-semibold text-brand-900">Financiamento</h3>
+              <p className="text-sm text-slate-700">Imóveis urbanos/casas podem simular financiamento aqui. Para chácaras usamos consórcio.</p>
             </div>
+          ) : (
+            <ConsorcioSimulator value={property.price} />
           )}
+
+          <Comments propertyId={property.id} />
         </div>
-        <div className="space-y-4 rounded-3xl border border-brand-100 bg-white p-7 shadow-lg shadow-brand-900/5">
-          {property.propertyCode && (
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-500">Codigo: {property.propertyCode}</p>
-          )}
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-700">{property.type}</p>
-          <h1 className="font-display text-4xl text-brand-900">{property.title}</h1>
-          <p className="text-slate-600">{property.city}</p>
-          {property.areaSize && <p className="text-sm text-slate-600">Area: {property.areaSize}</p>}
-          <p className="text-sm text-slate-600">Escritura e registro: {statusDeed}</p>
-          <p className="text-2xl font-bold text-brand-700">{formatPrice(property.price)}</p>
-          <p className="leading-relaxed text-slate-700">{property.description}</p>
-          <a
-            href={getWhatsAppLink(whatsappMessage)}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-block rounded-xl bg-brand-700 px-5 py-3 font-semibold text-white"
-          >
-            Saber Mais no WhatsApp
-          </a>
-        </div>
-      </div>
+      </section>
     </main>
   );
 }

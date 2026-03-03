@@ -36,6 +36,17 @@ export async function getPropertyById(id) {
   return res.json();
 }
 
+export const getTravelTimes = (id) => fetch(`${API_URL}/properties/${id}/travel-times`, { cache: "no-store" }).then((r) => r.json());
+export const getCitySummary = (city) =>
+  fetch(`${API_URL}/cities/summary?city=${encodeURIComponent(city)}`, { cache: "no-store" }).then((r) => r.json());
+export const getComments = (id) => fetch(`${API_URL}/properties/${id}/comments`, { cache: "no-store" }).then((r) => r.json());
+export const postComment = (id, payload) =>
+  fetch(`${API_URL}/properties/${id}/comments`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  }).then((r) => r.json());
+
 export async function adminLogin(payload) {
   const res = await fetch(`${API_URL}/auth/login`, {
     method: "POST",
