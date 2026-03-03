@@ -3,6 +3,8 @@ import FiltersBar from "@/components/FiltersBar";
 import PropertyCard from "@/components/PropertyCard";
 import { getProperties } from "@/lib/api";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Imóveis Rurais",
   description: "Listagem de fazendas, sítios e chácaras com filtros por tipo, cidade e faixa de preço."

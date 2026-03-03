@@ -23,7 +23,9 @@ export async function getProperties(params = {}) {
 
     return res.json();
   } catch (error) {
-    console.error("getProperties failed:", error.message);
+    if (process.env.NODE_ENV !== "production") {
+      console.error("getProperties failed:", error.message);
+    }
     return [];
   }
 }
