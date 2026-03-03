@@ -38,10 +38,47 @@ const parseImages = (images) => {
   return [];
 };
 
+const parseNumberLikeUserInput = (rawValue) => {
+  const value = String(rawValue || "").trim().toLowerCase();
+  if (!value) return NaN;
+
+  const cleaned = value.replace(/r\$\s?/g, "").replace(/\s+/g, "");
+  const hasComma = cleaned.includes(",");
+  const hasDot = cleaned.includes(".");
+  const lastComma = cleaned.lastIndexOf(",");
+  const lastDot = cleaned.lastIndexOf(".");
+
+  if (hasComma && hasDot) {
+    const decimalSeparator = lastComma > lastDot ? "," : ".";
+    const thousandsSeparator = decimalSeparator === "," ? /\./g : /,/g;
+    const normalized = cleaned.replace(thousandsSeparator, "").replace(decimalSeparator, ".");
+    return Number(normalized);
+  }
+
+  if (hasComma || hasDot) {
+    const separator = hasComma ? "," : ".";
+    const parts = cleaned.split(separator);
+    const hasThousands = parts.length > 2 || (parts.length === 2 && parts[1].length === 3);
+    const normalized = hasThousands ? parts.join("") : cleaned.replace(separator, ".");
+    return Number(normalized);
+  }
+
+  return Number(cleaned);
+};
+
 const parsePrice = (value) => {
-  const digits = String(value ?? "").replace(/\D/g, "");
-  const parsed = Number(digits);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+  const source = String(value || "").trim().toLowerCase();
+  if (!source) return null;
+
+  const isMillion = /\bmi\b|milh(?:ao|oes|ão|ões)/.test(source);
+  const isThousand = !isMillion && /\bmil\b/.test(source);
+  const multiplier = isMillion ? 1_000_000 : isThousand ? 1_000 : 1;
+
+  const numericPart = source.replace(/\bmi\b|\bmil\b|milh(?:ao|oes|ão|ões)/g, "").trim();
+  const baseValue = parseNumberLikeUserInput(numericPart);
+  if (!Number.isFinite(baseValue) || baseValue <= 0) return null;
+
+  return Math.round(baseValue * multiplier);
 };
 
 app.get("/health", (_req, res) => {
@@ -129,7 +166,7 @@ app.post(
     const parsedPrice = parsePrice(price);
 
     if (!parsedPrice) {
-      return res.status(400).json({ message: "Preco invalido. Informe apenas numeros." });
+      return res.status(400).json({ message: "Preco invalido. Use: 580000, 580.000, 580 mil ou 1.2 mi." });
     }
 
     const property = await prisma.property.create({
@@ -160,7 +197,7 @@ app.put(
     const parsedPrice = parsePrice(price);
 
     if (!parsedPrice) {
-      return res.status(400).json({ message: "Preco invalido. Informe apenas numeros." });
+      return res.status(400).json({ message: "Preco invalido. Use: 580000, 580.000, 580 mil ou 1.2 mi." });
     }
 
     const property = await prisma.property.update({

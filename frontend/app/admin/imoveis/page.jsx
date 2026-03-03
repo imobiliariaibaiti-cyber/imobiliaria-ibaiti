@@ -19,10 +19,47 @@ const initialForm = {
   images: ""
 };
 
+const parseNumberLikeUserInput = (rawValue) => {
+  const value = String(rawValue || "").trim().toLowerCase();
+  if (!value) return NaN;
+
+  const cleaned = value.replace(/r\$\s?/g, "").replace(/\s+/g, "");
+  const hasComma = cleaned.includes(",");
+  const hasDot = cleaned.includes(".");
+  const lastComma = cleaned.lastIndexOf(",");
+  const lastDot = cleaned.lastIndexOf(".");
+
+  if (hasComma && hasDot) {
+    const decimalSeparator = lastComma > lastDot ? "," : ".";
+    const thousandsSeparator = decimalSeparator === "," ? /\./g : /,/g;
+    const normalized = cleaned.replace(thousandsSeparator, "").replace(decimalSeparator, ".");
+    return Number(normalized);
+  }
+
+  if (hasComma || hasDot) {
+    const separator = hasComma ? "," : ".";
+    const parts = cleaned.split(separator);
+    const hasThousands = parts.length > 2 || (parts.length === 2 && parts[1].length === 3);
+    const normalized = hasThousands ? parts.join("") : cleaned.replace(separator, ".");
+    return Number(normalized);
+  }
+
+  return Number(cleaned);
+};
+
 const parsePriceToNumber = (value) => {
-  if (typeof value === "number" && Number.isFinite(value)) return value;
-  const digits = String(value || "").replace(/\D/g, "");
-  return digits ? Number(digits) : NaN;
+  const source = String(value || "").trim().toLowerCase();
+  if (!source) return NaN;
+
+  const isMillion = /\bmi\b|milh(?:ao|oes|ão|ões)/.test(source);
+  const isThousand = !isMillion && /\bmil\b/.test(source);
+  const multiplier = isMillion ? 1_000_000 : isThousand ? 1_000 : 1;
+
+  const numericPart = source.replace(/\bmi\b|\bmil\b|milh(?:ao|oes|ão|ões)/g, "").trim();
+  const baseValue = parseNumberLikeUserInput(numericPart);
+  if (!Number.isFinite(baseValue) || baseValue <= 0) return NaN;
+
+  return Math.round(baseValue * multiplier);
 };
 
 export default function AdminPropertiesPage() {
@@ -81,7 +118,7 @@ export default function AdminPropertiesPage() {
       };
 
       if (!Number.isFinite(payload.price) || payload.price <= 0) {
-        throw new Error("Preco invalido. Informe apenas numeros.");
+        throw new Error("Preco invalido. Use exemplos: 580000, 580.000, 580 mil, 1.2 mi.");
       }
 
       if (editing) {
@@ -142,7 +179,7 @@ export default function AdminPropertiesPage() {
         </select>
         <input className="rounded-xl border border-brand-100 px-4 py-3" placeholder="Cidade" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} required />
         <input className="rounded-xl border border-brand-100 px-4 py-3" placeholder="Tamanho da area (ex: 21.200 m2)" value={form.areaSize} onChange={(e) => setForm({ ...form, areaSize: e.target.value })} />
-        <input className="rounded-xl border border-brand-100 px-4 py-3" type="number" placeholder="Preco" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} required />
+        <input className="rounded-xl border border-brand-100 px-4 py-3" type="text" placeholder="Preco (ex: 580.000 | 580 mil | 1.2 mi)" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} required />
         <textarea className="rounded-xl border border-brand-100 px-4 py-3 md:col-span-2" placeholder="Descricao" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} required />
         <input className="rounded-xl border border-brand-100 px-4 py-3 md:col-span-2" placeholder="URL do video no YouTube (opcional)" value={form.videoUrl} onChange={(e) => setForm({ ...form, videoUrl: e.target.value })} />
         <input className="rounded-xl border border-brand-100 px-4 py-3 md:col-span-2" placeholder="URLs das imagens (separadas por virgula)" value={form.images} onChange={(e) => setForm({ ...form, images: e.target.value })} />
