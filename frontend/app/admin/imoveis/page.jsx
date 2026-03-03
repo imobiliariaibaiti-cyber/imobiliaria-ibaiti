@@ -19,6 +19,12 @@ const initialForm = {
   images: ""
 };
 
+const parsePriceToNumber = (value) => {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  const digits = String(value || "").replace(/\D/g, "");
+  return digits ? Number(digits) : NaN;
+};
+
 export default function AdminPropertiesPage() {
   const [token, setToken] = useState("");
   const [form, setForm] = useState(initialForm);
@@ -66,13 +72,17 @@ export default function AdminPropertiesPage() {
         type: form.type,
         city: form.city,
         areaSize: form.areaSize,
-        price: Number(form.price),
+        price: parsePriceToNumber(form.price),
         description: form.description,
         videoUrl: form.videoUrl,
         deedAndRegistryOk: form.deedAndRegistryOk,
         featured: form.featured,
         images: urls
       };
+
+      if (!Number.isFinite(payload.price) || payload.price <= 0) {
+        throw new Error("Preco invalido. Informe apenas numeros.");
+      }
 
       if (editing) {
         await adminRequest(`/admin/properties/${form.id}`, token, {

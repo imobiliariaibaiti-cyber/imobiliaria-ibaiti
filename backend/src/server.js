@@ -38,6 +38,12 @@ const parseImages = (images) => {
   return [];
 };
 
+const parsePrice = (value) => {
+  const digits = String(value ?? "").replace(/\D/g, "");
+  const parsed = Number(digits);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+};
+
 app.get("/health", (_req, res) => {
   res.json({ ok: true });
 });
@@ -120,6 +126,11 @@ app.post(
   authMiddleware,
   asyncHandler(async (req, res) => {
     const { propertyCode, title, type, city, areaSize, price, description, deedAndRegistryOk, featured, images, videoUrl } = req.body;
+    const parsedPrice = parsePrice(price);
+
+    if (!parsedPrice) {
+      return res.status(400).json({ message: "Preco invalido. Informe apenas numeros." });
+    }
 
     const property = await prisma.property.create({
       data: {
@@ -128,7 +139,7 @@ app.post(
         type,
         city,
         areaSize: areaSize?.trim() || null,
-        price: Number(price),
+        price: parsedPrice,
         description,
         deedAndRegistryOk: Boolean(deedAndRegistryOk),
         featured: Boolean(featured),
@@ -146,6 +157,11 @@ app.put(
   authMiddleware,
   asyncHandler(async (req, res) => {
     const { propertyCode, title, type, city, areaSize, price, description, deedAndRegistryOk, featured, images, videoUrl } = req.body;
+    const parsedPrice = parsePrice(price);
+
+    if (!parsedPrice) {
+      return res.status(400).json({ message: "Preco invalido. Informe apenas numeros." });
+    }
 
     const property = await prisma.property.update({
       where: { id: Number(req.params.id) },
@@ -155,7 +171,7 @@ app.put(
         type,
         city,
         areaSize: areaSize?.trim() || null,
-        price: Number(price),
+        price: parsedPrice,
         description,
         deedAndRegistryOk: Boolean(deedAndRegistryOk),
         featured: Boolean(featured),
@@ -208,6 +224,11 @@ app.post(
 
 app.use((err, _req, res, _next) => {
   console.error("Unhandled API error:", err);
+
+  if (err?.code === "P2025") {
+    return res.status(404).json({ message: "Imovel nao encontrado." });
+  }
+
   res.status(500).json({ message: "Erro interno do servidor." });
 });
 
