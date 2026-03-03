@@ -229,6 +229,10 @@ app.use((err, _req, res, _next) => {
     return res.status(404).json({ message: "Imovel nao encontrado." });
   }
 
+  if (err?.code === "P2021" || err?.code === "P2022") {
+    return res.status(500).json({ message: "Banco de dados desatualizado. Execute Prisma db push no backend." });
+  }
+
   res.status(500).json({ message: "Erro interno do servidor." });
 });
 
