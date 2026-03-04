@@ -69,8 +69,6 @@ export default async function PropertyPage({ params }) {
           ) : (
             <ConsorcioSimulator value={property.price} />
           )}
-
-          <Comments propertyId={property.id} />
         </div>
       </section>
     </main>
