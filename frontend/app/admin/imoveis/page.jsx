@@ -169,21 +169,23 @@ export default function AdminPropertiesPage() {
         <p className="text-slate-600">Cadastre, edite e destaque seus anuncios.</p>
       </div>
 
-      <form onSubmit={onSubmit} className="grid gap-3 rounded-3xl border border-brand-100 bg-white p-6 shadow-lg shadow-brand-900/5 md:grid-cols-2">
-        <input className="rounded-xl border border-brand-100 px-4 py-3" placeholder="Codigo do imovel (ex: IBT-001)" value={form.propertyCode} onChange={(e) => setForm({ ...form, propertyCode: e.target.value })} />
-        <input className="rounded-xl border border-brand-100 px-4 py-3" placeholder="Titulo" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
-        <select className="rounded-xl border border-brand-100 px-4 py-3" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
-          <option>Fazenda</option>
-          <option>Sitio</option>
-          <option>Chacara</option>
+      <form onSubmit={onSubmit} className="grid gap-3 overflow-hidden rounded-3xl border border-brand-100 bg-white p-6 shadow-lg shadow-brand-900/5 md:grid-cols-2">
+        <input className="w-full min-w-0 rounded-xl border border-brand-100 px-4 py-3" placeholder="Codigo do imovel (ex: IBT-001)" value={form.propertyCode} onChange={(e) => setForm({ ...form, propertyCode: e.target.value })} />
+        <input className="w-full min-w-0 rounded-xl border border-brand-100 px-4 py-3" placeholder="Titulo" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
+        <select className="w-full min-w-0 rounded-xl border border-brand-100 px-4 py-3" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
+          <option value="Fazenda">Fazenda</option>
+          <option value="Casa">Casa</option>
+          <option value="Sitio">Sítio</option>
+          <option value="Chacara">Chácara</option>
+          <option value="Lote">Lote</option>
         </select>
-        <input className="rounded-xl border border-brand-100 px-4 py-3" placeholder="Cidade" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} required />
-        <input className="rounded-xl border border-brand-100 px-4 py-3" placeholder="Tamanho da area (ex: 21.200 m2)" value={form.areaSize} onChange={(e) => setForm({ ...form, areaSize: e.target.value })} />
-        <input className="rounded-xl border border-brand-100 px-4 py-3" type="text" placeholder="Preco (ex: 580.000 | 580 mil | 1.2 mi)" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} required />
-        <textarea className="rounded-xl border border-brand-100 px-4 py-3 md:col-span-2" placeholder="Descricao" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} required />
-        <input className="rounded-xl border border-brand-100 px-4 py-3 md:col-span-2" placeholder="URL do video no YouTube (opcional)" value={form.videoUrl} onChange={(e) => setForm({ ...form, videoUrl: e.target.value })} />
-        <input className="rounded-xl border border-brand-100 px-4 py-3 md:col-span-2" placeholder="URLs das imagens (separadas por virgula)" value={form.images} onChange={(e) => setForm({ ...form, images: e.target.value })} />
-        <input className="rounded-xl border border-brand-100 px-4 py-3 md:col-span-2" type="file" multiple accept="image/*" onChange={(e) => setImagesFiles(Array.from(e.target.files || []))} />
+        <input className="w-full min-w-0 rounded-xl border border-brand-100 px-4 py-3" placeholder="Cidade" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} required />
+        <input className="w-full min-w-0 rounded-xl border border-brand-100 px-4 py-3" placeholder="Tamanho da area (ex: 21.200 m2)" value={form.areaSize} onChange={(e) => setForm({ ...form, areaSize: e.target.value })} />
+        <input className="w-full min-w-0 rounded-xl border border-brand-100 px-4 py-3" type="text" placeholder="Preco (ex: 580.000 | 580 mil | 1.2 mi)" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} required />
+        <textarea className="w-full min-w-0 rounded-xl border border-brand-100 px-4 py-3 md:col-span-2" placeholder="Descricao" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} required />
+        <input className="w-full min-w-0 rounded-xl border border-brand-100 px-4 py-3 md:col-span-2" placeholder="URL do video no YouTube (opcional)" value={form.videoUrl} onChange={(e) => setForm({ ...form, videoUrl: e.target.value })} />
+        <input className="w-full min-w-0 rounded-xl border border-brand-100 px-4 py-3 md:col-span-2" placeholder="URLs das imagens (separadas por virgula)" value={form.images} onChange={(e) => setForm({ ...form, images: e.target.value })} />
+        <input className="w-full min-w-0 rounded-xl border border-brand-100 px-4 py-3 text-sm md:col-span-2" type="file" multiple accept="image/*" onChange={(e) => setImagesFiles(Array.from(e.target.files || []))} />
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" checked={form.featured} onChange={(e) => setForm({ ...form, featured: e.target.checked })} />
           Marcar como destaque
