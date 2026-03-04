@@ -50,7 +50,7 @@ export default async function PropertyPage({ params }) {
           </div>
 
           <TravelTimeChips propertyId={property.id} lat={property.latitude} lng={property.longitude} />
-          <CitySummaryCard city={property.city} />
+          <CitySummaryCard city={property.city} manualSummary={property.cityDescription} />
         </div>
       </section>
 

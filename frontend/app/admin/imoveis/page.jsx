@@ -11,6 +11,7 @@ const initialForm = {
   type: "Fazenda",
   city: "",
   address: "",
+  cityDescription: "",
   latitude: "",
   longitude: "",
   areaSize: "",
@@ -111,6 +112,7 @@ export default function AdminPropertiesPage() {
         title: form.title,
         type: form.type,
         city: form.city,
+        cityDescription: form.cityDescription,
         address: form.address,
         latitude: form.latitude,
         longitude: form.longitude,
@@ -152,6 +154,7 @@ export default function AdminPropertiesPage() {
       ...property,
       propertyCode: property.propertyCode || "",
       address: property.address || "",
+      cityDescription: property.cityDescription || "",
       latitude: property.latitude ?? "",
       longitude: property.longitude ?? "",
       areaSize: property.areaSize || "",
@@ -190,6 +193,7 @@ export default function AdminPropertiesPage() {
         </select>
         <input className="w-full min-w-0 rounded-xl border border-brand-100 px-4 py-3" placeholder="Cidade" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} required />
         <input className="w-full min-w-0 rounded-xl border border-brand-100 px-4 py-3" placeholder="Endereço (rua, nº, bairro)" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
+        <textarea className="w-full min-w-0 rounded-xl border border-brand-100 px-4 py-3 md:col-span-2" placeholder="Descrição da cidade (história, atrativos, contexto)" value={form.cityDescription} onChange={(e) => setForm({ ...form, cityDescription: e.target.value })} />
         <input className="w-full min-w-0 rounded-xl border border-brand-100 px-4 py-3" placeholder="Latitude (ex: -23.847)" value={form.latitude} onChange={(e) => setForm({ ...form, latitude: e.target.value })} />
         <input className="w-full min-w-0 rounded-xl border border-brand-100 px-4 py-3" placeholder="Longitude (ex: -50.193)" value={form.longitude} onChange={(e) => setForm({ ...form, longitude: e.target.value })} />
         <input className="w-full min-w-0 rounded-xl border border-brand-100 px-4 py-3" placeholder="Tamanho da area (ex: 21.200 m2)" value={form.areaSize} onChange={(e) => setForm({ ...form, areaSize: e.target.value })} />
