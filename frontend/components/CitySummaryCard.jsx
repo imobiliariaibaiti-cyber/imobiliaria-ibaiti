@@ -5,10 +5,29 @@ import { getCitySummary } from "@/lib/api";
 
 // Descrições padrão para evitar ter que preencher no painel
 const DEFAULT_CITY_SUMMARIES = {
-  japira:
-    "Japira é um município do Vale do Ivaí, no norte do Paraná. Originou-se de colônias agrícolas e tornou-se município na década de 1960. Pequeno, tranquilo e com economia baseada na agricultura familiar.",
   ibaiti:
-    "Ibaiti é um importante polo madeireiro e agropecuário do Centro-Norte do Paraná. Criado em 1947, está em região de planaltos com clima ameno, boa infraestrutura urbana e acesso pela BR-153."
+    "Ibaiti é um polo madeireiro e agropecuário do Centro-Norte do Paraná, criado em 1947. Fica no entroncamento da BR-153 com a PR-272, tem clima ameno, áreas de reflorestamento e serviços regionais.",
+  japira:
+    "Japira fica no norte do Paraná, no Vale do Ivaí. Tornou-se município nos anos 1960, mantém perfil rural e agricultura familiar e oferece ambiente tranquilo e de pequeno porte urbano.",
+  curiuva:
+    "Curiúva está a leste de Ibaiti, com origem em colônias agrícolas e economia baseada em erva-mate, madeira e pequenas indústrias. Mantém perfil rural com ligação pela PR-160 e proximidade com o Rio Tibagi.",
+  sapopema:
+    "Sapopema é conhecida pelo Pico Agudo e turismo de natureza. Economia ligada à agricultura e erva-mate, acesso principal pela PR-090 e paisagens de serras e rios no Vale do Tibagi.",
+  tomazina:
+    "Tomazina fica às margens do Rio das Cinzas, com patrimônio histórico religioso e turismo de pesca. Agricultura e pecuária são bases econômicas; acesso pelas PR-424 e PR-239.",
+  figueira:
+    "Figueira surgiu com a exploração de carvão em Figueira e Candiota. Hoje tem economia de serviços e agricultura, às margens do Rio das Cinzas, e acesso pela PR-272.",
+  jaboti:
+    "Jaboti está no Norte Pioneiro, com origem em fazendas de café. Economia atual diversificada entre agricultura e serviços; ligação pelas PR-272 e PR-435.",
+  wenceslau_braz:
+    "Wenceslau Braz é município do Norte Pioneiro, conhecido pelo café e grãos. Possui centro urbano compacto e acesso pela BR-153 e PR-092.",
+  sapopema_supplement: "",
+  congonhinhas:
+    "Congonhinhas, no Norte Pioneiro, tem economia agrícola (café, soja, milho) e criação de gado. Acesso principal pela PR-442.",
+  arapoti:
+    "Arapoti integra o Vale do Ivaí/Tibagi, com forte setor madeireiro e agroindustrial (leite e grãos). Fica na PR-092, próximo à BR-153, com cooperativas atuantes.",
+  santana_do_itarare:
+    "Santana do Itararé está no Norte Pioneiro, na divisa com SP, com economia de grãos e pecuária e ligação rodoviária pela PR-092."
 };
 
 export default function CitySummaryCard({ city, manualSummary }) {
