@@ -6,6 +6,7 @@ import { getProperties } from "@/lib/api";
 
 export default async function HomePage() {
   const featured = await getProperties({ featured: true });
+  const cityChips = ["Ibaiti", "Pinhalão", "Curiúva", "Sapopema", "Tomazina", "Figueira", "Jaboti", "Wenceslau Braz", "Congonhinhas", "Arapoti", "Santana do Itararé"];
 
   return (
     <main>
@@ -41,6 +42,22 @@ export default async function HomePage() {
             <p className="mt-4 text-slate-700">
               Atuamos com foco em imóveis rurais de alta liquidez e negociações transparentes. Você recebe suporte da visita à assinatura.
             </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-white">
+        <div className="container-main py-6 sm:py-8">
+          <div className="flex flex-wrap gap-3">
+            {cityChips.map((city) => (
+              <Link
+                key={city}
+                href={`/imoveis?city=${encodeURIComponent(city)}`}
+                className="rounded-full border border-brand-200 px-4 py-2 text-sm font-semibold text-brand-800 hover:-translate-y-[1px] hover:shadow-sm transition"
+              >
+                Imóveis em {city}
+              </Link>
+            ))}
           </div>
         </div>
       </section>
