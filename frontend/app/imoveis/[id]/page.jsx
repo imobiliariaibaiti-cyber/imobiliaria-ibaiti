@@ -18,10 +18,10 @@ export default async function PropertyPage({ params }) {
     <main className="container-main py-8 space-y-8">
       <section className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
         <div className="space-y-4">
-          <img src={resolveImage(property.images)} alt={property.title} className="h-[420px] w-full rounded-3xl object-cover" />
+          <img src={resolveImage(property.images)} alt={property.title} className="w-full max-w-full rounded-3xl object-cover aspect-[4/3]" />
           {property.videoUrl && (
             <iframe
-              className="aspect-video w-full rounded-2xl border border-brand-100"
+              className="aspect-video w-full max-w-full rounded-2xl border border-brand-100"
               src={getYouTubeEmbedUrl(property.videoUrl)}
               allowFullScreen
             />
