@@ -22,6 +22,7 @@ model Property {
   featured    Boolean  @default(false)
   images      Json
   videoUrl    String?
+  comments    Comment[]
   createdAt   DateTime @default(now())
 }
 
