@@ -8,20 +8,23 @@ const STQ_QUOTES = {
 };
 
 async function fetchStooq(symbol) {
-  const url = `https://stooq.com/db/l/?s=${symbol}&f=sd2t2ohlcv&h&e=json`;
+  // CSV endpoint é mais estável
+  const url = `https://stooq.com/q/l/?s=${symbol}&f=sd2t2ohlcv&h&e=csv`;
   const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) throw new Error(`Stooq status ${res.status}`);
-  const data = await res.json();
-  const r = data?.[0];
-  if (!r || !r.c) throw new Error("sem cotação");
+  const text = await res.text();
+  const lines = text.trim().split("\n");
+  if (lines.length < 2) throw new Error("sem dados");
+  const cols = lines[1].split(",");
+  const [sym, date, time, open, high, low, close] = cols;
   return {
     symbol,
-    close: Number(r.c),
-    open: Number(r.o),
-    high: Number(r.h),
-    low: Number(r.l),
-    date: r.d,
-    time: r.t
+    close: Number(close),
+    open: Number(open),
+    high: Number(high),
+    low: Number(low),
+    date,
+    time
   };
 }
 
