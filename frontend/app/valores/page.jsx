@@ -21,12 +21,16 @@ const fallbackBoi = [
 ];
 
 const fallbackCommodities = [
-  { name: "Milho", price: 64.5, unit: "R$/saca 60kg", source: "base CEPEA" },
-  { name: "Soja", price: 148.0, unit: "R$/saca 60kg", source: "base CEPEA" },
-  { name: "Trigo", price: 83.0, unit: "R$/saca 60kg", source: "mercado PR" },
-  { name: "Aveia", price: 68.0, unit: "R$/saca 60kg", source: "mercado PR" }
+  { name: "Milho", price: 64.5, unit: "R$/saca 60kg", source: "CEPEA" },
+  { name: "Soja", price: 148.0, unit: "R$/saca 60kg", source: "CEPEA" },
+  { name: "Trigo", price: 83.0, unit: "R$/saca 60kg", source: "Paraná" },
+  { name: "Aveia", price: 68.0, unit: "R$/saca 60kg", source: "Paraná" }
 ];
-const fallbackCafe = { name: "Café arábica", price: 1840.71, unit: "R$/saca 60kg", source: "CEPEA/Guaxupé", date: "2026-03-02" };
+const fallbackCafeGrades = [
+  { name: "Arábica Tipo 6/7 bebida dura", price: 1840.7, unit: "R$/saca 60kg", source: "CEPEA/Guaxupé" },
+  { name: "Arábica Tipo 7/8 rio", price: 1625.3, unit: "R$/saca 60kg", source: "CEPEA" },
+  { name: "Conilon 7/8", price: 790.4, unit: "R$/saca 60kg", source: "CEPEA" }
+];
 
 const formatMoney = (v) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 
@@ -38,7 +42,7 @@ export default function ValoresPage() {
   const [error, setError] = useState("");
   const [boiSeries, setBoiSeries] = useState(fallbackBoi);
   const [commodities, setCommodities] = useState(fallbackCommodities);
-  const [cafe, setCafe] = useState(fallbackCafe);
+  const [coffeeGrades, setCoffeeGrades] = useState(fallbackCafeGrades);
 
   useEffect(() => {
     const load = async () => {
@@ -90,18 +94,22 @@ export default function ValoresPage() {
           const rc = await fetch(cafeEndpoint, { cache: "no-store" });
           if (rc.ok) {
             const dc = await rc.json();
-            if (dc?.price) {
-              setCafe({
-                name: dc.name || "Café arábica",
-                price: dc.price,
-                unit: dc.unit || "R$/saca 60kg",
-                source: dc.source || "Fonte externa",
-                date: dc.date || ""
-              });
+            if (Array.isArray(dc) && dc.length) {
+              setCoffeeGrades(dc);
+            } else if (dc?.price) {
+              setCoffeeGrades([
+                {
+                  name: dc.name || "Café arábica",
+                  price: dc.price,
+                  unit: dc.unit || "R$/saca 60kg",
+                  source: dc.source || "Fonte externa",
+                  date: dc.date || ""
+                }
+              ]);
             }
           }
         } catch (err) {
-          setCafe(fallbackCafe);
+          setCoffeeGrades(fallbackCafeGrades);
         }
       }
     };
@@ -138,7 +146,6 @@ export default function ValoresPage() {
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.28em] text-brand-700">Ibaiti + 100 km</p>
           <h1 className="font-display text-4xl text-brand-900">Valores de terras por alqueire</h1>
-          <p className="text-slate-600">Atualize os valores pelo endpoint configurado ou compartilhe os dados para importarmos.</p>
           {error && <p className="text-xs text-amber-700">{error}</p>}
         </div>
         <div className="flex gap-3">
@@ -196,25 +203,26 @@ export default function ValoresPage() {
       </section>
 
       <section className="rounded-2xl border border-brand-100 bg-white p-4 shadow-sm">
-        <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-700">Grãos e café · PR</p>
-            <h2 className="font-display text-2xl text-brand-900">Preços atuais</h2>
-            <p className="text-sm text-slate-600">Atualize via endpoint quando tiver a cotação do dia.</p>
+            <h2 className="font-display text-2xl text-brand-900">Preços atuais (auto)</h2>
           </div>
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <article className="rounded-xl border border-brand-100 bg-[#fff8e9] px-4 py-3 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-700">{cafe.name}</p>
-            <p className="text-2xl font-display text-brand-900">{cafe.price.toFixed ? cafe.price.toFixed(2) : cafe.price}</p>
-            <p className="text-sm text-slate-600">{cafe.unit}</p>
-            {cafe.date && <p className="text-xs text-slate-500">Atualizado: {cafe.date}</p>}
-            {cafe.source && <p className="text-xs text-slate-500">Fonte: {cafe.source}</p>}
-          </article>
+          {coffeeGrades.map((c) => (
+            <article key={c.name} className="rounded-xl border border-brand-100 bg-[#fff8e9] px-4 py-3 shadow-sm">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-700 break-words">{c.name}</p>
+              <p className="text-2xl font-display text-brand-900">{c.price?.toFixed ? c.price.toFixed(2) : c.price}</p>
+              <p className="text-sm text-slate-600">{c.unit || "R$/saca 60kg"}</p>
+              {c.date && <p className="text-xs text-slate-500">Atualizado: {c.date}</p>}
+              {c.source && <p className="text-xs text-slate-500">Fonte: {c.source}</p>}
+            </article>
+          ))}
           {commodities.map((c) => (
             <article key={c.name} className="rounded-xl border border-brand-100 bg-brand-50/60 px-4 py-3 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-700">{c.name}</p>
-              <p className="text-2xl font-display text-brand-900">{c.price.toFixed ? c.price.toFixed(2) : c.price}</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-700 break-words">{c.name}</p>
+              <p className="text-2xl font-display text-brand-900">{c.price?.toFixed ? c.price.toFixed(2) : c.price}</p>
               <p className="text-sm text-slate-600">{c.unit}</p>
               {c.source && <p className="text-xs text-slate-500">Fonte: {c.source}</p>}
             </article>
