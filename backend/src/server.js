@@ -183,7 +183,7 @@ app.get(
     }
 
     if (!Array.isArray(destinations) || destinations.length === 0) {
-      return res.json([]);
+      destinations = [{ label: "Ibaiti", lat: -23.847, lng: -50.193 }];
     }
 
     const origins = `${latitude},${longitude}`;
@@ -322,6 +322,7 @@ app.post(
       title,
       type,
       city,
+      address,
       latitude,
       longitude,
       areaSize,
@@ -344,6 +345,7 @@ app.post(
         title,
         type,
         city,
+        address: address?.trim() || null,
         areaSize: areaSize?.trim() || null,
         price: parsedPrice,
         description,
@@ -369,6 +371,7 @@ app.put(
       title,
       type,
       city,
+      address,
       latitude,
       longitude,
       areaSize,
@@ -392,6 +395,7 @@ app.put(
         title,
         type,
         city,
+        address: address?.trim() || null,
         areaSize: areaSize?.trim() || null,
         price: parsedPrice,
         description,

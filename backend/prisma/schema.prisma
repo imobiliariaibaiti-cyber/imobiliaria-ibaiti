@@ -13,6 +13,7 @@ model Property {
   title       String
   type        String
   city        String
+  address     String?
   latitude    Float?
   longitude   Float?
   areaSize    String?
