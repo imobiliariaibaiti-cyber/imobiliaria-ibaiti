@@ -6,13 +6,42 @@
 
 :root {
   color-scheme: light;
+  --surface-cream: #fbf6ed;
+  --surface-warm: #f8f1e4;
+  --surface-green: #eef6f1;
 }
 
 body {
-  @apply bg-gradient-to-b from-brand-50 via-white to-white text-slate-800;
+  @apply bg-[linear-gradient(180deg,#fffdf9_0%,#fbf6ed_22%,#ffffff_48%,#f9fbf8_100%)] text-slate-800;
 }
 
 .container-main {
   @apply mx-auto max-w-6xl px-4;
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-xl bg-brand-700 px-5 py-3 font-semibold text-white transition duration-150 hover:-translate-y-[1px] hover:bg-brand-600 hover:shadow-md;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-xl border border-brand-300 bg-white px-5 py-3 font-semibold text-brand-800 transition duration-150 hover:-translate-y-[1px] hover:border-brand-500 hover:bg-brand-50 hover:shadow-sm;
+  }
+
+  .btn-accent {
+    @apply inline-flex items-center justify-center rounded-xl bg-accent-700 px-5 py-3 font-semibold text-white transition duration-150 hover:-translate-y-[1px] hover:bg-accent-600 hover:shadow-md;
+  }
+
+  .btn-soft {
+    @apply inline-flex items-center justify-center rounded-xl border border-signal-200 bg-signal-50 px-5 py-3 font-semibold text-signal-800 transition duration-150 hover:-translate-y-[1px] hover:border-signal-300 hover:bg-signal-100 hover:shadow-sm;
+  }
+
+  .panel-card {
+    @apply rounded-3xl border border-brand-100 bg-white shadow-lg shadow-brand-900/5;
+  }
+
+  .panel-soft {
+    @apply rounded-3xl border border-brand-100 bg-brand-50/70 shadow-sm;
+  }
 }
 

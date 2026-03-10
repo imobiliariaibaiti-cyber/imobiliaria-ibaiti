@@ -1,39 +1,37 @@
 import Link from "next/link";
 import { formatPrice, getWhatsAppLink, resolveImage } from "@/lib/format";
+import { getCityContentByName } from "@/lib/cities";
 
 export default function PropertyCard({ property }) {
   const image = resolveImage(property.images);
+  const cityContent = getCityContentByName(property.city);
   const whatsapp = getWhatsAppLink(
     `Ola! Tenho interesse no imovel ${property.title}${property.propertyCode ? ` (codigo ${property.propertyCode})` : ""} em ${property.city}. Quero saber mais para fechar negocio.`
   );
 
   return (
-    <article className="group overflow-hidden rounded-3xl border border-brand-100 bg-white shadow-lg shadow-brand-900/5 transition hover:-translate-y-1 hover:shadow-xl max-w-full">
-      <img
-        src={image}
-        alt={property.title}
-        className="w-full aspect-[4/3] object-cover transition duration-500 group-hover:scale-105"
-      />
+    <article className="group panel-card max-w-full overflow-hidden transition hover:-translate-y-1 hover:shadow-xl">
+      <img src={image} alt={property.title} className="aspect-[4/3] w-full object-cover transition duration-500 group-hover:scale-105" />
       <div className="space-y-3 p-5">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-600">{property.type}</p>
-        {property.propertyCode && <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-500">{property.propertyCode}</p>}
+        <div className="flex flex-wrap gap-2">
+          <span className="rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-brand-700">{property.type}</span>
+          {property.propertyCode && <span className="rounded-full bg-signal-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-signal-800">{property.propertyCode}</span>}
+        </div>
         <h3 className="text-xl font-bold text-brand-900 break-words">{property.title}</h3>
-        <p className="text-sm text-slate-600 break-words">{property.city}</p>
-        <p className="text-lg font-semibold text-brand-700">{formatPrice(property.price)}</p>
-        <div className="flex gap-2 pt-2 flex-col sm:flex-row md:flex-row">
-          <Link
-            href={`/imoveis/${property.id}`}
-            className="flex-1 rounded-xl bg-brand-700 px-4 py-2 text-center text-sm font-semibold text-white w-full md:w-auto"
-          >
-            Ver Detalhes
+        {cityContent ? (
+          <Link href={`/cidades/${cityContent.slug}`} className="text-sm text-accent-700 break-words underline underline-offset-2">
+            {property.city}
           </Link>
-          <a
-            href={whatsapp}
-            target="_blank"
-            className="rounded-xl border border-brand-700 px-4 py-2 text-sm font-semibold text-brand-700 text-center w-full md:w-auto"
-            rel="noreferrer"
-          >
-            Saber Mais
+        ) : (
+          <p className="text-sm text-slate-600 break-words">{property.city}</p>
+        )}
+        <p className="text-lg font-semibold text-brand-700">{formatPrice(property.price)}</p>
+        <div className="flex flex-col gap-2 pt-2 sm:flex-row">
+          <Link href={`/imoveis/${property.id}`} className="btn-primary flex-1 px-4 py-2 text-sm">
+            Ver detalhes
+          </Link>
+          <a href={whatsapp} target="_blank" className="btn-accent px-4 py-2 text-sm" rel="noreferrer">
+            Saber mais
           </a>
         </div>
       </div>

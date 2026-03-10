@@ -7,10 +7,26 @@ import multer from "multer";
 import axios from "axios";
 import { v2 as cloudinary } from "cloudinary";
 import { PrismaClient } from "@prisma/client";
-import { authMiddleware } from "./middleware/auth.js";
+import { adminAuthMiddleware, clientAuthMiddleware } from "./middleware/auth.js";
 
 dotenv.config();
 const BUILD_MARKER = "backend-build-2026-03-02-01";
+
+const serializeProperty = (property) => {
+  if (!property) return property;
+  return {
+    ...property,
+    price: typeof property.price === "bigint" ? Number(property.price) : property.price
+  };
+};
+
+const serializeClientProperty = (property) => {
+  if (!property) return property;
+  return {
+    ...property,
+    priceExpectation: typeof property.priceExpectation === "bigint" ? Number(property.priceExpectation) : property.priceExpectation
+  };
+};
 
 process.on("unhandledRejection", (reason) => {
   console.error("Unhandled Promise Rejection:", reason);
@@ -82,9 +98,62 @@ const parsePrice = (value) => {
   return Math.round(baseValue * multiplier);
 };
 
+const signAdminToken = (email) => jwt.sign({ role: "admin", email }, process.env.JWT_SECRET, { expiresIn: "12h" });
+const signClientToken = (client) =>
+  jwt.sign({ role: "client", clientUserId: client.id, email: client.email, name: client.name }, process.env.JWT_SECRET, { expiresIn: "30d" });
+
+const uploadImagesToCloudinary = async (files, folder = "imobiliaria-ibaiti") => {
+  if (!files?.length) {
+    throw new Error("Nenhuma imagem enviada.");
+  }
+
+  if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+    throw new Error("Cloudinary nao configurado.");
+  }
+
+  return Promise.all(
+    files.map(async (file) => {
+      const base64 = file.buffer.toString("base64");
+      const dataUri = `data:${file.mimetype};base64,${base64}`;
+      const result = await cloudinary.uploader.upload(dataUri, { folder });
+      if (!result?.secure_url) {
+        throw new Error("Cloudinary retornou sem URL da imagem.");
+      }
+      return result.secure_url;
+    })
+  );
+};
+
 app.get("/health", (_req, res) => {
   res.json({ ok: true });
 });
+
+// Public: registrar visita/pageview (sem PII)
+app.post(
+  "/analytics/visit",
+  asyncHandler(async (req, res) => {
+    const { path, propertyId, source } = req.body || {};
+    const safePath = String(path || "").slice(0, 200);
+    const referrer = String(req.headers.referer || req.headers.referrer || "").slice(0, 200) || null;
+    const userAgent = String(req.headers["user-agent"] || "").slice(0, 200) || null;
+
+    if (!safePath) {
+      return res.status(400).json({ message: "path obrigatorio." });
+    }
+
+    await prisma.visit.create({
+      data: {
+        path: safePath,
+        propertyId: propertyId ? Number(propertyId) : null,
+        source: source ? String(source).slice(0, 80) : null,
+        referrer,
+        userAgent
+      }
+    });
+
+    res.status(201).json({ ok: true });
+  })
+);
 
 app.post(
   "/auth/login",
@@ -104,8 +173,108 @@ app.post(
       return res.status(401).json({ message: "Credenciais invalidas." });
     }
 
-    const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: "12h" });
+    const token = signAdminToken(email);
     res.json({ token });
+  })
+);
+
+app.post(
+  "/client/auth/register",
+  asyncHandler(async (req, res) => {
+    const { name, email, phone, password, hasAccount } = req.body || {};
+
+    if (!name || !email || !phone || !password) {
+      return res.status(400).json({ message: "Nome, email, telefone e senha sao obrigatorios." });
+    }
+
+    const normalizedEmail = String(email).trim().toLowerCase();
+    const existing = await prisma.clientUser.findUnique({ where: { email: normalizedEmail } });
+    if (existing) {
+      return res.status(409).json({ message: "Ja existe uma conta com esse email." });
+    }
+
+    const passwordHash = await bcrypt.hash(String(password), 10);
+    const clientUser = await prisma.clientUser.create({
+      data: {
+        name: String(name).trim(),
+        email: normalizedEmail,
+        phone: String(phone).trim(),
+        passwordHash,
+        hasAccount: Boolean(hasAccount)
+      }
+    });
+
+    const token = signClientToken(clientUser);
+    res.status(201).json({
+      token,
+      user: {
+        id: clientUser.id,
+        name: clientUser.name,
+        email: clientUser.email,
+        phone: clientUser.phone,
+        hasAccount: clientUser.hasAccount
+      }
+    });
+  })
+);
+
+app.post(
+  "/client/auth/login",
+  asyncHandler(async (req, res) => {
+    const { email, password } = req.body || {};
+
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email e senha sao obrigatorios." });
+    }
+
+    const clientUser = await prisma.clientUser.findUnique({
+      where: { email: String(email).trim().toLowerCase() }
+    });
+
+    if (!clientUser) {
+      return res.status(401).json({ message: "Credenciais invalidas." });
+    }
+
+    const isValid = await bcrypt.compare(String(password), clientUser.passwordHash);
+    if (!isValid) {
+      return res.status(401).json({ message: "Credenciais invalidas." });
+    }
+
+    const token = signClientToken(clientUser);
+    res.json({
+      token,
+      user: {
+        id: clientUser.id,
+        name: clientUser.name,
+        email: clientUser.email,
+        phone: clientUser.phone,
+        hasAccount: clientUser.hasAccount
+      }
+    });
+  })
+);
+
+app.get(
+  "/client/me",
+  clientAuthMiddleware,
+  asyncHandler(async (req, res) => {
+    const clientUser = await prisma.clientUser.findUnique({
+      where: { id: Number(req.auth.clientUserId) },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        hasAccount: true,
+        createdAt: true
+      }
+    });
+
+    if (!clientUser) {
+      return res.status(404).json({ message: "Cliente nao encontrado." });
+    }
+
+    res.json(clientUser);
   })
 );
 
@@ -134,7 +303,7 @@ app.get(
         orderBy: [{ featured: "desc" }, { createdAt: "desc" }]
       });
 
-      return res.json(properties);
+      return res.json(properties.map(serializeProperty));
     } catch (error) {
       if (error.code === "P2021") {
         return res.json([]);
@@ -147,15 +316,20 @@ app.get(
 app.get(
   "/properties/:id",
   asyncHandler(async (req, res) => {
+    const id = Number(req.params.id);
+    if (!Number.isFinite(id)) {
+      return res.status(400).json({ message: "ID invalido." });
+    }
+
     const property = await prisma.property.findUnique({
-      where: { id: Number(req.params.id) }
+      where: { id }
     });
 
     if (!property) {
       return res.status(404).json({ message: "Imovel nao encontrado." });
     }
 
-    res.json(property);
+    res.json(serializeProperty(property));
   })
 );
 
@@ -163,7 +337,12 @@ app.get(
 app.get(
   "/properties/:id/travel-times",
   asyncHandler(async (req, res) => {
-    const property = await prisma.property.findUnique({ where: { id: Number(req.params.id) } });
+    const id = Number(req.params.id);
+    if (!Number.isFinite(id)) {
+      return res.status(400).json({ message: "ID invalido." });
+    }
+
+    const property = await prisma.property.findUnique({ where: { id } });
 
     if (!property) {
       return res.status(404).json({ message: "Imovel nao encontrado." });
@@ -299,10 +478,146 @@ app.post(
   })
 );
 
+app.get(
+  "/client/properties",
+  clientAuthMiddleware,
+  asyncHandler(async (req, res) => {
+    const properties = await prisma.clientProperty.findMany({
+      where: { clientUserId: Number(req.auth.clientUserId) },
+      orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }]
+    });
+
+    res.json(properties.map(serializeClientProperty));
+  })
+);
+
+app.post(
+  "/client/properties",
+  clientAuthMiddleware,
+  asyncHandler(async (req, res) => {
+    const {
+      title,
+      type,
+      city,
+      address,
+      latitude,
+      longitude,
+      areaSize,
+      priceExpectation,
+      description,
+      documentStatus,
+      deedAndRegistryOk,
+      images,
+      videoUrl,
+      notes,
+      status
+    } = req.body || {};
+
+    if (!title || !type || !city || !description || !documentStatus) {
+      return res.status(400).json({ message: "Titulo, tipo, cidade, descricao e status documental sao obrigatorios." });
+    }
+
+    const property = await prisma.clientProperty.create({
+      data: {
+        clientUserId: Number(req.auth.clientUserId),
+        title: String(title).trim(),
+        type: String(type).trim(),
+        city: String(city).trim(),
+        address: address ? String(address).trim() : null,
+        latitude: latitude ? Number(latitude) : null,
+        longitude: longitude ? Number(longitude) : null,
+        areaSize: areaSize ? String(areaSize).trim() : null,
+        priceExpectation: parsePrice(priceExpectation) ? BigInt(parsePrice(priceExpectation)) : null,
+        description: String(description).trim(),
+        documentStatus: String(documentStatus).trim(),
+        deedAndRegistryOk: Boolean(deedAndRegistryOk),
+        images: parseImages(images),
+        videoUrl: videoUrl ? String(videoUrl).trim() : null,
+        notes: notes ? String(notes).trim() : null,
+        status: status === "DRAFT" ? "DRAFT" : "PENDING_REVIEW"
+      }
+    });
+
+    res.status(201).json(serializeClientProperty(property));
+  })
+);
+
+app.put(
+  "/client/properties/:id",
+  clientAuthMiddleware,
+  asyncHandler(async (req, res) => {
+    const id = Number(req.params.id);
+    if (!Number.isFinite(id)) {
+      return res.status(400).json({ message: "ID invalido." });
+    }
+
+    const existing = await prisma.clientProperty.findFirst({
+      where: { id, clientUserId: Number(req.auth.clientUserId) }
+    });
+
+    if (!existing) {
+      return res.status(404).json({ message: "Imovel do cliente nao encontrado." });
+    }
+
+    const {
+      title,
+      type,
+      city,
+      address,
+      latitude,
+      longitude,
+      areaSize,
+      priceExpectation,
+      description,
+      documentStatus,
+      deedAndRegistryOk,
+      images,
+      videoUrl,
+      notes,
+      status
+    } = req.body || {};
+
+    const nextStatus = existing.status === "APPROVED" || existing.status === "REJECTED" ? existing.status : status === "DRAFT" ? "DRAFT" : "PENDING_REVIEW";
+
+    const property = await prisma.clientProperty.update({
+      where: { id },
+      data: {
+        title: title ? String(title).trim() : existing.title,
+        type: type ? String(type).trim() : existing.type,
+        city: city ? String(city).trim() : existing.city,
+        address: address !== undefined ? (address ? String(address).trim() : null) : existing.address,
+        latitude: latitude !== undefined ? (latitude ? Number(latitude) : null) : existing.latitude,
+        longitude: longitude !== undefined ? (longitude ? Number(longitude) : null) : existing.longitude,
+        areaSize: areaSize !== undefined ? (areaSize ? String(areaSize).trim() : null) : existing.areaSize,
+        priceExpectation: priceExpectation !== undefined ? (parsePrice(priceExpectation) ? BigInt(parsePrice(priceExpectation)) : null) : existing.priceExpectation,
+        description: description ? String(description).trim() : existing.description,
+        documentStatus: documentStatus ? String(documentStatus).trim() : existing.documentStatus,
+        deedAndRegistryOk: deedAndRegistryOk !== undefined ? Boolean(deedAndRegistryOk) : existing.deedAndRegistryOk,
+        images: images !== undefined ? parseImages(images) : existing.images,
+        videoUrl: videoUrl !== undefined ? (videoUrl ? String(videoUrl).trim() : null) : existing.videoUrl,
+        notes: notes !== undefined ? (notes ? String(notes).trim() : null) : existing.notes,
+        status: nextStatus
+      }
+    });
+
+    res.json(serializeClientProperty(property));
+  })
+);
+
+app.post(
+  "/client/upload",
+  clientAuthMiddleware,
+  upload.array("images", 10),
+  asyncHandler(async (req, res) => {
+    const urls = await uploadImagesToCloudinary(req.files, "imobiliaria-ibaiti/clientes");
+    res.status(201).json({ urls });
+  })
+);
+
 // Approve comment (admin)
 app.put(
   "/admin/comments/:id/approve",
-  authMiddleware,
+  adminAuthMiddleware,
   asyncHandler(async (req, res) => {
     const comment = await prisma.comment.update({
       where: { id: Number(req.params.id) },
@@ -315,7 +630,7 @@ app.put(
 
 app.post(
   "/admin/properties",
-  authMiddleware,
+  adminAuthMiddleware,
   asyncHandler(async (req, res) => {
     const {
       propertyCode,
@@ -349,7 +664,7 @@ app.post(
         cityDescription: cityDescription?.trim() || null,
         address: address?.trim() || null,
         areaSize: areaSize?.trim() || null,
-        price: parsedPrice,
+        price: BigInt(parsedPrice),
         description,
         deedAndRegistryOk: Boolean(deedAndRegistryOk),
         featured: Boolean(featured),
@@ -360,13 +675,13 @@ app.post(
       }
     });
 
-    res.status(201).json(property);
+    res.status(201).json(serializeProperty(property));
   })
 );
 
 app.put(
   "/admin/properties/:id",
-  authMiddleware,
+  adminAuthMiddleware,
   asyncHandler(async (req, res) => {
     const {
       propertyCode,
@@ -391,8 +706,13 @@ app.put(
       return res.status(400).json({ message: "Preco invalido. Use: 580000, 580.000, 580 mil ou 1.2 mi." });
     }
 
+    const id = Number(req.params.id);
+    if (!Number.isFinite(id)) {
+      return res.status(400).json({ message: "ID invalido." });
+    }
+
     const property = await prisma.property.update({
-      where: { id: Number(req.params.id) },
+      where: { id },
       data: {
         propertyCode: propertyCode?.trim() || null,
         title,
@@ -401,7 +721,7 @@ app.put(
         cityDescription: cityDescription?.trim() || null,
         address: address?.trim() || null,
         areaSize: areaSize?.trim() || null,
-        price: parsedPrice,
+        price: BigInt(parsedPrice),
         description,
         deedAndRegistryOk: Boolean(deedAndRegistryOk),
         featured: Boolean(featured),
@@ -412,45 +732,88 @@ app.put(
       }
     });
 
-    res.json(property);
+    res.json(serializeProperty(property));
   })
 );
 
 app.delete(
   "/admin/properties/:id",
-  authMiddleware,
+  adminAuthMiddleware,
   asyncHandler(async (req, res) => {
     await prisma.property.delete({ where: { id: Number(req.params.id) } });
     res.status(204).send();
   })
 );
 
+// Admin dashboard: agregados simples de visitas
+app.get(
+  "/admin/analytics/summary",
+  adminAuthMiddleware,
+  asyncHandler(async (req, res) => {
+    const days = Number(req.query.days || 30);
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+    const total = await prisma.visit.count({ where: { createdAt: { gte: since } } });
+
+    const propertyViewsRaw = await prisma.visit.groupBy({
+      by: ["propertyId"],
+      where: { createdAt: { gte: since }, NOT: { propertyId: null } },
+      _count: { _all: true },
+      orderBy: { _count: { _all: "desc" } },
+      take: 10
+    });
+
+    const propertyIds = propertyViewsRaw.map((item) => item.propertyId).filter(Boolean);
+    const propertyLookup = propertyIds.length
+      ? await prisma.property.findMany({
+          where: { id: { in: propertyIds } },
+          select: { id: true, title: true, city: true }
+        })
+      : [];
+
+    const propertyViews = propertyViewsRaw.map((item) => {
+      const meta = propertyLookup.find((p) => p.id === item.propertyId);
+      return {
+        propertyId: item.propertyId,
+        title: meta?.title || "Imovel removido",
+        city: meta?.city || null,
+        views: item._count._all
+      };
+    });
+
+    const pages = await prisma.visit.groupBy({
+      by: ["path"],
+      where: { createdAt: { gte: since } },
+      _count: { _all: true },
+      orderBy: { _count: { _all: "desc" } },
+      take: 10
+    });
+
+    const daily = await prisma.$queryRaw`
+      SELECT date_trunc('day', "createdAt")::date AS day, COUNT(*)::int AS visits
+      FROM "Visit"
+      WHERE "createdAt" >= ${since}
+      GROUP BY day
+      ORDER BY day DESC
+      LIMIT 60;
+    `;
+
+    res.json({
+      totalVisits: total,
+      propertyViews,
+      topPages: pages.map((p) => ({ path: p.path, views: p._count._all })),
+      daily: daily.map((row) => ({ day: row.day, visits: Number(row.visits) }))
+    });
+  })
+);
+
 app.post(
   "/upload",
-  authMiddleware,
+  adminAuthMiddleware,
   upload.array("images", 10),
   asyncHandler(async (req, res) => {
-    if (!req.files?.length) {
-      return res.status(400).json({ message: "Nenhuma imagem enviada." });
-    }
-
-    if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
-      return res.status(400).json({ message: "Cloudinary nao configurado." });
-    }
-
-    const uploads = await Promise.all(
-      req.files.map(async (file) => {
-        const base64 = file.buffer.toString("base64");
-        const dataUri = `data:${file.mimetype};base64,${base64}`;
-        const result = await cloudinary.uploader.upload(dataUri, { folder: "imobiliaria-ibaiti" });
-        if (!result?.secure_url) {
-          throw new Error("Cloudinary retornou sem URL da imagem.");
-        }
-        return result.secure_url;
-      })
-    );
-
-    res.status(201).json({ urls: uploads });
+    const urls = await uploadImagesToCloudinary(req.files, "imobiliaria-ibaiti");
+    res.status(201).json({ urls });
   })
 );
 

@@ -10,36 +10,20 @@ export default function ContactForm() {
 
   const submit = (event) => {
     event.preventDefault();
-    const text = `Olá, sou ${name}. Telefone: ${phone}. Mensagem: ${message}`;
+    const text = `Ola, sou ${name}. Telefone: ${phone}. Mensagem: ${message}`;
     window.open(getWhatsAppLink(text), "_blank");
   };
 
   return (
-    <form onSubmit={submit} className="space-y-3 rounded-3xl border border-brand-100 bg-white p-6 shadow-lg shadow-brand-900/5">
-      <h3 className="font-display text-2xl text-brand-900">Fale com Especialista</h3>
-      <input
-        required
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        placeholder="Seu nome"
-        className="w-full rounded-xl border border-brand-100 px-4 py-3"
-      />
-      <input
-        required
-        value={phone}
-        onChange={(e) => setPhone(e.target.value)}
-        placeholder="WhatsApp"
-        className="w-full rounded-xl border border-brand-100 px-4 py-3"
-      />
-      <textarea
-        required
-        value={message}
-        onChange={(e) => setMessage(e.target.value)}
-        placeholder="Como podemos ajudar?"
-        className="h-28 w-full rounded-xl border border-brand-100 px-4 py-3"
-      />
-      <button className="w-full rounded-xl bg-brand-700 px-4 py-3 font-semibold text-white">Enviar no WhatsApp</button>
+    <form onSubmit={submit} className="panel-card space-y-4 p-6">
+      <div className="space-y-2">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent-700">Contato rapido</p>
+        <h3 className="font-display text-2xl text-brand-900">Fale com um especialista</h3>
+      </div>
+      <input required value={name} onChange={(event) => setName(event.target.value)} placeholder="Seu nome" className="w-full rounded-xl border border-brand-100 bg-white px-4 py-3 focus:border-accent-300 focus:outline-none" />
+      <input required value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="WhatsApp" className="w-full rounded-xl border border-brand-100 bg-white px-4 py-3 focus:border-accent-300 focus:outline-none" />
+      <textarea required value={message} onChange={(event) => setMessage(event.target.value)} placeholder="Como podemos ajudar?" className="h-28 w-full rounded-xl border border-brand-100 bg-white px-4 py-3 focus:border-accent-300 focus:outline-none" />
+      <button className="btn-accent w-full">Enviar no WhatsApp</button>
     </form>
   );
 }
-

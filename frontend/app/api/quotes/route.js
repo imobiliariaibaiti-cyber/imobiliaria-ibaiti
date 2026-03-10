@@ -1,9 +1,11 @@
 const STQ_QUOTES = {
   coffeeArabica: "kc.f", // ICE Coffee C
   coffeeRobusta: "rc.f", // ICE Robusta
-  cattle: "lc.f", // Live Cattle CME
-  corn: "c.f", // Corn CBOT
-  soy: "s.f", // Soybeans CBOT
+  cattle: "le.f", // Live Cattle CME
+  corn: "zc.f", // Corn CBOT
+  soy: "zs.f", // Soybeans CBOT
+  wheat: "zw.f", // Wheat CBOT
+  oats: "zo.f", // Oats CBOT
   usdbrl: "usdbrl" // USD/BRL forex
 };
 
@@ -42,6 +44,10 @@ function convertToBRL({ usdbrl, commodity }) {
       return usd * 0.01 * fx * (60 / 27.216);
     case STQ_QUOTES.soy:
       return usd * 0.01 * fx * (60 / 27.216);
+    case STQ_QUOTES.wheat:
+      return usd * 0.01 * fx * (60 / 27.216);
+    case STQ_QUOTES.oats:
+      return usd * 0.01 * fx * (60 / 14.515);
     case STQ_QUOTES.cattle:
       return usd * 0.01 * 32.15 * fx;
     default:
@@ -57,6 +63,8 @@ export async function GET() {
       STQ_QUOTES.coffeeRobusta,
       STQ_QUOTES.corn,
       STQ_QUOTES.soy,
+      STQ_QUOTES.wheat,
+      STQ_QUOTES.oats,
       STQ_QUOTES.cattle
     ];
 
@@ -78,7 +86,11 @@ export async function GET() {
                 ? "Milho (CBOT C)"
                 : sym === STQ_QUOTES.soy
                 ? "Soja (CBOT S)"
-                : "Boi gordo (Live Cattle)",
+                : sym === STQ_QUOTES.wheat
+                ? "Trigo (CBOT W)"
+                : sym === STQ_QUOTES.oats
+                ? "Aveia (CBOT O)"
+                : "Boi gordo (@ 15kg)",
             unit:
               sym === STQ_QUOTES.cattle
                 ? "R$/@ 15kg"

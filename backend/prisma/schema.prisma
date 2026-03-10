@@ -8,24 +8,25 @@ datasource db {
 }
 
 model Property {
-  id          Int      @id @default(autoincrement())
-  propertyCode String?
-  title       String
-  type        String
-  city        String
+  id              Int      @id @default(autoincrement())
+  propertyCode    String?
+  title           String
+  type            String
+  city            String
   cityDescription String?
-  address     String?
-  latitude    Float?
-  longitude   Float?
-  areaSize    String?
-  price       Int
-  description String
+  address         String?
+  latitude        Float?
+  longitude       Float?
+  areaSize        String?
+  price           BigInt
+  description     String
   deedAndRegistryOk Boolean @default(false)
-  featured    Boolean  @default(false)
-  images      Json
-  videoUrl    String?
-  comments    Comment[]
-  createdAt   DateTime @default(now())
+  featured        Boolean  @default(false)
+  images          Json
+  videoUrl        String?
+  comments        Comment[]
+  visits          Visit[]
+  createdAt       DateTime @default(now())
 }
 
 model Comment {
@@ -40,19 +41,79 @@ model Comment {
   createdAt  DateTime @default(now())
 }
 
+model Visit {
+  id         Int       @id @default(autoincrement())
+  path       String
+  propertyId Int?
+  property   Property? @relation(fields: [propertyId], references: [id])
+  referrer   String?
+  userAgent  String?
+  source     String?
+  createdAt  DateTime  @default(now())
+
+  @@index([createdAt])
+  @@index([propertyId])
+}
+
 model CitySummary {
-  id        Int      @id @default(autoincrement())
-  city      String   @unique
-  summary   String?
+  id         Int      @id @default(autoincrement())
+  city       String   @unique
+  summary    String?
   population Int?
-  rating    Float?
-  lat       Float?
-  lng       Float?
-  fetchedAt DateTime @default(now())
+  rating     Float?
+  lat        Float?
+  lng        Float?
+  fetchedAt  DateTime @default(now())
+}
+
+model ClientUser {
+  id            Int              @id @default(autoincrement())
+  name          String
+  email         String           @unique
+  phone         String
+  passwordHash  String
+  hasAccount    Boolean          @default(false)
+  properties    ClientProperty[]
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+}
+
+model ClientProperty {
+  id                 Int                  @id @default(autoincrement())
+  clientUserId       Int
+  clientUser         ClientUser           @relation(fields: [clientUserId], references: [id])
+  title              String
+  type               String
+  city               String
+  address            String?
+  latitude           Float?
+  longitude          Float?
+  areaSize           String?
+  priceExpectation   BigInt?
+  description        String
+  documentStatus     String
+  deedAndRegistryOk  Boolean             @default(false)
+  images             Json
+  videoUrl           String?
+  status             ClientPropertyStatus @default(PENDING_REVIEW)
+  notes              String?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+
+  @@index([clientUserId])
+  @@index([status])
 }
 
 enum CommentStatus {
   PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ClientPropertyStatus {
+  DRAFT
+  PENDING_REVIEW
+  IN_REVIEW
   APPROVED
   REJECTED
 }

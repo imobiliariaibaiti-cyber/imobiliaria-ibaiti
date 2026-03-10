@@ -161,6 +161,11 @@ export default function AdminPropertiesPage() {
     });
   };
 
+  const logout = () => {
+    localStorage.removeItem("adminToken");
+    window.location.href = "/admin";
+  };
+
   const removeProperty = async (id) => {
     if (!confirm("Excluir este imovel?")) return;
     try {
@@ -173,9 +178,19 @@ export default function AdminPropertiesPage() {
 
   return (
     <main className="container-main space-y-8 py-10">
-      <div>
-        <h1 className="font-display text-4xl text-brand-900">Painel de Imoveis</h1>
-        <p className="text-slate-600">Cadastre, edite e destaque seus anuncios.</p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="font-display text-4xl text-brand-900">Painel de Imoveis</h1>
+          <p className="text-slate-600">Cadastre, edite e destaque seus anuncios.</p>
+        </div>
+        <div className="flex gap-2">
+          <a href="/admin/analytics" className="rounded-lg border border-brand-700 px-3 py-2 text-sm font-semibold text-brand-700">
+            Dashboard
+          </a>
+          <button onClick={logout} className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-600">
+            Sair
+          </button>
+        </div>
       </div>
 
       <form onSubmit={onSubmit} className="grid gap-3 overflow-hidden rounded-3xl border border-brand-100 bg-white p-6 shadow-lg shadow-brand-900/5 md:grid-cols-2">
